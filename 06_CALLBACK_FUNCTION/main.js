@@ -1,5 +1,8 @@
-const fs = require('fs'),
-      data = fs.readFileSync('input.txt');
+const fs = require('fs');
 
-console.log(data.toString());
+fs.readFile('input.txt', (err, data) => {
+    if (err) return console.errer(err);
+    console.log(data.toString());
+});
+
 console.log('Program has ended');
