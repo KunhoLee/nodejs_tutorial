@@ -1,8 +1,13 @@
 module.exports = (app, fs) => {
-    app.get('/', (req, res) => res.render('index', {
-        'title': 'MY HOMEPAGE',
-        'length': 5
-    }));
+    app.get('/', (req, res) => {
+        var sess = req.session;
+        res.render('index', {
+            'title': 'MY HOMEPAGE',
+            'length': 5,
+            'name': sess.name,
+            'username': sess.username
+        });
+    });
     app.get('/list', (req, res) => fs.readFile(
         __dirname + '/../data/' + 'user.json',
         'utf8',
@@ -111,5 +116,47 @@ module.exports = (app, fs) => {
                 );
             }
         );
+    });
+    app.get('/login/:username/:password', (req, res) => {
+        var sess = req.session;
+        fs.readFile(
+            __dirname + '/../data/' + 'user.json',
+            'utf8',
+            (err, data) => {
+                var users = JSON.parse(data),
+                    username = req.params.username,
+                    password = req.params.password,
+                    result = {};
+                if (!users[username]) {
+                    // USERNAME NOT FOUND
+                    result['success'] = 0;
+                    result['error'] = 'not found';
+                    return res.json(result);
+                } else if (users[username]['password'] === password) {
+                    result['success'] = 1;
+                    sess.username = username;
+                    sess.name = users[username]['name'];
+                    return res.json(result);
+                } else {
+                    result['success'] = 0;
+                    result['error'] = 'incorrect';
+                    return res.json(result); 
+                }
+            }
+        );
+    });
+    app.get('/logout', (req, res) => {
+        var sess = req.session;
+        if (sess.username) {
+            req.session.destroy(err => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    res.redirect('/');
+                }
+            });
+        } else {
+            res.redirect('/');
+        }
     });
 };
